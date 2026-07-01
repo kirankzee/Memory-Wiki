@@ -18,6 +18,10 @@ Full instructions: **[SETUP.md](SETUP.md)** · Diagrams: **[docs/ARCHITECTURE.md
 
 ---
 
+# Architecture
+
+![Architecture](docs/architecture.svg)
+
 ## 1. What it does
 
 1. `POST /api/transcripts` — accepts a transcript (multipart), stores the raw text in the
