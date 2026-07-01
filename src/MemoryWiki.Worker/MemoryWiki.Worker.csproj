@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <PropertyGroup>
+    <RootNamespace>MemoryWiki.Worker</RootNamespace>
+    <UserSecretsId>memorywiki-worker</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryWiki.Application\MemoryWiki.Application.csproj" />
+    <ProjectReference Include="..\MemoryWiki.Infrastructure\MemoryWiki.Infrastructure.csproj" />
+    <ProjectReference Include="..\MemoryWiki.Contracts\MemoryWiki.Contracts.csproj" />
+    <ProjectReference Include="..\MemoryWiki.Shared\MemoryWiki.Shared.csproj" />
+  </ItemGroup>
+</Project>

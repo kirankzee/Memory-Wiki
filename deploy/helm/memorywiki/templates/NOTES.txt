@@ -1,0 +1,12 @@
+MemoryWiki has been deployed.
+
+API service:        memorywiki-api (port 80 -> {{ .Values.api.port }})
+Worker autoscaling: {{ if .Values.worker.keda.enabled }}KEDA on RabbitMQ queue depth ({{ .Values.worker.keda.minReplicas }}-{{ .Values.worker.keda.maxReplicas }} replicas){{ else }}fixed {{ .Values.worker.replicas }} replica(s){{ end }}
+
+Port-forward the API:
+  kubectl port-forward svc/memorywiki-api 8080:80
+
+Then open http://localhost:8080/swagger
+
+NOTE: This chart deploys the application only. Provision PostgreSQL, RabbitMQ and an
+S3-compatible store via their own charts/operators and update values.config accordingly.

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MemoryWiki.Application\MemoryWiki.Application.csproj" />
+    <ProjectReference Include="..\..\src\MemoryWiki.Infrastructure\MemoryWiki.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\MemoryWiki.Domain\MemoryWiki.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MemoryWiki.Contracts\MemoryWiki.Contracts.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memorywiki-worker
+  labels: { app: memorywiki-worker }
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels: { app: memorywiki-worker }
+  template:
+    metadata:
+      labels: { app: memorywiki-worker }
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.image.worker.repository }}:{{ .Values.image.worker.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+{{ include "memorywiki.env" . | indent 12 }}
+          resources: {{ toYaml .Values.worker.resources | nindent 12 }}
+{{- if .Values.worker.keda.enabled }}
+---
+# KEDA scales the worker on RabbitMQ queue depth (scale-to-zero capable).
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: memorywiki-worker
+spec:
+  scaleTargetRef:
+    name: memorywiki-worker
+  minReplicaCount: {{ .Values.worker.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.worker.keda.maxReplicas }}
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: memory.generate
+        mode: QueueLength
+        value: {{ .Values.worker.keda.queueLength | quote }}
+        host: {{ .Values.config.rabbitmq.url | quote }}
+{{- end }}

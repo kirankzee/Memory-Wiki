@@ -1,0 +1,57 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore MemoryWiki.sln
+
+      - name: Build
+        run: dotnet build MemoryWiki.sln -c Release --no-restore
+
+      - name: Unit tests
+        run: dotnet test tests/MemoryWiki.Application.Tests/MemoryWiki.Application.Tests.csproj -c Release --no-build --verbosity normal
+
+      # Integration tests use Testcontainers; Docker is available on ubuntu-latest runners.
+      - name: Integration tests
+        run: dotnet test tests/MemoryWiki.Integration.Tests/MemoryWiki.Integration.Tests.csproj -c Release --no-build --verbosity normal
+
+  docker:
+    needs: build-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/MemoryWiki.Api/Dockerfile
+          push: false
+          tags: memorywiki/api:latest
+
+      - name: Build Worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/MemoryWiki.Worker/Dockerfile
+          push: false
+          tags: memorywiki/worker:latest

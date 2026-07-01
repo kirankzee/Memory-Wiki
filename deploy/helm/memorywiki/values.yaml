@@ -1,0 +1,47 @@
+image:
+  api:
+    repository: memorywiki/api
+    tag: latest
+  worker:
+    repository: memorywiki/worker
+    tag: latest
+  pullPolicy: IfNotPresent
+
+api:
+  replicas: 2
+  port: 8080
+  resources:
+    requests: { cpu: "100m", memory: "256Mi" }
+    limits: { cpu: "500m", memory: "512Mi" }
+
+worker:
+  replicas: 1
+  resources:
+    requests: { cpu: "100m", memory: "256Mi" }
+    limits: { cpu: "750m", memory: "768Mi" }
+  # KEDA autoscaling on RabbitMQ queue depth
+  keda:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 10
+    queueLength: "20"   # target messages per replica
+
+config:
+  connectionStrings:
+    postgres: "Host=postgres;Port=5432;Database=memorywiki;Username=memorywiki;Password=memorywiki"
+  s3:
+    serviceUrl: "http://minio:9000"
+    bucket: memorywiki
+  rabbitmq:
+    host: rabbitmq
+    # amqp URL for KEDA trigger
+    url: "amqp://guest:guest@rabbitmq:5672/"
+  llm:
+    provider: Deterministic
+
+# Sensitive values — supply via --set or a sealed/External secret in real clusters.
+secrets:
+  s3AccessKey: minioadmin
+  s3SecretKey: minioadmin
+  jwtSigningKey: super-secret-development-signing-key-change-me-please-32+
+  openAiApiKey: ""

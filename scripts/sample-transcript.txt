@@ -1,0 +1,18 @@
+Title: MemoryWiki Project Kickoff
+Date: 2026-02-03
+
+Alice: Welcome everyone. Today we're kicking off the MemoryWiki project. The goal is to turn raw meeting transcripts into a navigable memory wiki.
+Bob: Sounds great. What storage are we using for the generated files?
+Alice: We agreed to use an S3-compatible object store. Locally that's MinIO, in production AWS S3.
+Carol: And for the async processing? We don't want the upload request to block on the LLM.
+Alice: Right. We will publish a message to RabbitMQ and a background worker will call the LLM and write the memory files.
+Bob: Who owns the API surface?
+Alice: Bob, you'll own the transcript and memory endpoints. Carol will own the worker and prompt engineering.
+Carol: Got it. I'll design the memory schema with files under /people, /projects, /topics, and /events.
+Alice: One open question: how do we handle updates when a new transcript mentions an existing person?
+Carol: We should merge — load the existing file, add new facts, and never lose prior information.
+Bob: What about authentication?
+Alice: JWT with role-based access. Admin and User roles. We will deliver an MVP by 2026-03-01.
+Carol: Action item: I will draft the extraction prompt by next week.
+Bob: Action item: I'll scaffold the API and wire up Swagger.
+Alice: Perfect. Let's reconvene next Friday.

@@ -1,0 +1,108 @@
+name: memorywiki
+
+# Single-command local stack:  docker compose up --build
+# Runs fully OFFLINE by default (Llm__Provider=Deterministic). Set OpenAI vars in .env to use a real LLM.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-memorywiki}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-memorywiki}
+      POSTGRES_DB: ${POSTGRES_DB:-memorywiki}
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-memorywiki}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    ports: ["5672:5672", "15672:15672"]   # broker + management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports: ["9000:9000", "9001:9001"]     # S3 API + console
+    volumes: ["miniodata:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@memorywiki.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports: ["5050:80"]
+    depends_on: [postgres]
+
+  api:
+    build:
+      context: .
+      dockerfile: src/MemoryWiki.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-memorywiki};Username=${POSTGRES_USER:-memorywiki};Password=${POSTGRES_PASSWORD:-memorywiki}"
+      S3__ServiceUrl: "http://minio:9000"
+      S3__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
+      S3__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3__Bucket: ${MINIO_BUCKET:-memorywiki}
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: ${RABBITMQ_DEFAULT_USER:-guest}
+      RabbitMQ__Password: ${RABBITMQ_DEFAULT_PASS:-guest}
+      Llm__Provider: ${LLM__PROVIDER:-Deterministic}
+      OpenAI__ApiKey: ${OPENAI__APIKEY:-}
+      OpenAI__Model: ${OPENAI__MODEL:-gpt-4o-mini}
+      OpenAI__BaseUrl: ${OPENAI__BASEURL:-https://api.openai.com/v1}
+      Jwt__SigningKey: ${JWT__SIGNINGKEY:-super-secret-development-signing-key-change-me-please-32+}
+      Jwt__Issuer: ${JWT__ISSUER:-memorywiki}
+      Jwt__Audience: ${JWT__AUDIENCE:-memorywiki-clients}
+    ports: ["8080:8080"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      minio: { condition: service_healthy }
+
+  worker:
+    build:
+      context: .
+      dockerfile: src/MemoryWiki.Worker/Dockerfile
+    environment:
+      DOTNET_ENVIRONMENT: Production
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-memorywiki};Username=${POSTGRES_USER:-memorywiki};Password=${POSTGRES_PASSWORD:-memorywiki}"
+      S3__ServiceUrl: "http://minio:9000"
+      S3__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
+      S3__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3__Bucket: ${MINIO_BUCKET:-memorywiki}
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: ${RABBITMQ_DEFAULT_USER:-guest}
+      RabbitMQ__Password: ${RABBITMQ_DEFAULT_PASS:-guest}
+      Llm__Provider: ${LLM__PROVIDER:-Deterministic}
+      OpenAI__ApiKey: ${OPENAI__APIKEY:-}
+      OpenAI__Model: ${OPENAI__MODEL:-gpt-4o-mini}
+      OpenAI__BaseUrl: ${OPENAI__BASEURL:-https://api.openai.com/v1}
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      minio: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  miniodata:

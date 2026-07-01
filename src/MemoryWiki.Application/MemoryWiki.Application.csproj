@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="Mapster" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MemoryWiki.Domain\MemoryWiki.Domain.csproj" />
+    <ProjectReference Include="..\MemoryWiki.Contracts\MemoryWiki.Contracts.csproj" />
+    <ProjectReference Include="..\MemoryWiki.Shared\MemoryWiki.Shared.csproj" />
+  </ItemGroup>
+</Project>
