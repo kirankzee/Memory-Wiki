@@ -20,7 +20,7 @@ Full instructions: **[SETUP.md](SETUP.md)** · Diagrams: **[docs/ARCHITECTURE.md
 
 # Architecture
 
-![Architecture](docs/architecture.svg)
+![Architecture](docs/architecture.gif)
 
 ## 1. What it does
 
